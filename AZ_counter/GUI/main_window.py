@@ -17,5 +17,3 @@ class MainWindow:
 
     def run(self):
         self.window.mainloop()
-
-MainWindow("ав").run()

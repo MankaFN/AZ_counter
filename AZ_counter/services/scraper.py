@@ -114,4 +114,3 @@ class MarksScraper:
             else:
                 continue
         return marks
-print(MarksScraper().scrape("kapyrina-alevtina1", "240611_Alya", 2, True))
