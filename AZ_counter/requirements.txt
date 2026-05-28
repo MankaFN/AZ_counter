@@ -1,0 +1,4 @@
+playwright
+matplotlib
+customtkinter
+CTkMessagebox
