@@ -1,5 +1,6 @@
 import ast
-from  pytorch_tabnet.tab_model import TabNetClassifier
+from  catboost import CatBoostClassifier
+from catboost import CatBoostRegressor
 import numpy as np
 
 subjects = {
@@ -14,13 +15,20 @@ grades = {
     "8": 0,
     "10": 1
 }
+SEED = 67
 
 class AIMarksPredict:
     def __init__(self, window_size: int = 3):
         self.window_size = window_size
-        self.model = TabNetClassifier()
         try:
-            self.model.load_model('./best_tabnet.zip')
+            self.block1 = CatBoostClassifier()
+            self.block1.load_model("AI_models/")
+
+            self.block2 = CatBoostClassifier()
+            self.block2.load_model("AI_models/")
+
+            self.block3 = CatBoostRegressor()
+            self.block3.load_model("AI_models/")
         except FileNotFoundError:
             self.ai_retraining()
 
@@ -106,69 +114,21 @@ class AIMarksPredict:
 
         return round(deviation ** 0.5, 2)
 
-
-    def _ai_retraining(self, X, Y):
+    def _smart_split(self, X, Y, test_size=0.2, val_size=0):
         from sklearn.model_selection import train_test_split
-        import pandas as pd
+        if val_size == 0:
+            X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=test_size, random_state=SEED)
+            return (X_train, X_test, y_train, y_test)
 
-        X_train, X_valid, Y_train, Y_valid = train_test_split(X, Y, test_size=0.15, random_state=42)
 
-        X_train = np.array(X_train)
-        Y_train = np.array(Y_train)
-        X_valid = np.array(X_valid)
-        Y_valid = np.array(Y_valid)
 
-        print(pd.Series(Y_train).value_counts())
 
-        cat_idxs = [self.window_size*2, self.window_size*2+1]
-        cat_dims = [len(subjects)+1, len(grades)]
+    def _ai_retraining_model_1(self, X, Y):
+        X_train, X_test, y_train, y_test = self._smart_split(X, Y, test_size=0.2)
+        
 
-        self.model = TabNetClassifier(
-            n_d=32,
-            n_a=32,
-            n_steps=7,
-            gamma=1.5,
-            cat_idxs=cat_idxs,
-            cat_dims=cat_dims,
-            lambda_sparse=1e-4,
-            optimizer_params=dict(lr=1e-2),
-            scheduler_params=dict(step_size=15, gamma=0.8)
-        )
-
-        self.model.fit(
-            X_train=X_train, y_train=Y_train,
-            eval_set=[(X_valid, Y_valid)],
-            eval_name=['valid'],
-            max_epochs=100,
-            patience=20,
-            batch_size=16,
-            virtual_batch_size=8
-        )
-
-        self.model.save_model('./best_tabnet')
-        explain_matrix, masks = self.model.explain(X_valid)
-
-        # Усредняем маски по всем наблюдениям в тестовой выборке
-        global_importance = np.mean(explain_matrix, axis=0)
-
-        # Создаем таблицу DataFrame
-        feature_importance_df = pd.DataFrame({
-            'Feature': ["Оценка1", "коэффицент1", "Оценка2", "коэффицент2", "Оценка3", "коэффицент3", "Оценка4", "коэффицент4", "Оценка5", "коэффицент5", "предмет", "класс", "скипы", "средний балл", "тренд", "станд отклон"],  # Замените на список названий ваших колонок
-            'Importance': global_importance
-        })
-
-        # Сортируем от самых влияющих к наименее влияющим
-        feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False).reset_index(
-            drop=True)
-
-        # Выводим топ самых влияющих параметров
-        print(feature_importance_df.head(16))
 
     def ai_predict(self, marks: dict, grade: int) -> int:
-
-        model = TabNetClassifier()
-        model.load_model('./best_tabnet.zip')
-
         X_pred = []
 
         subject = next(iter(marks))
