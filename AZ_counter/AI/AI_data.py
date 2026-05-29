@@ -20,22 +20,7 @@ SEED = 67
 class AIMarksPredict:
     def __init__(self, window_size: int = 3):
         self.window_size = window_size
-        try:
-            self.block1 = CatBoostClassifier()
-            self.block1.load_model("AI_models/")
-
-            self.block2 = CatBoostClassifier()
-            self.block2.load_model("AI_models/")
-
-            self.block3 = CatBoostRegressor()
-            self.block3.load_model("AI_models/")
-        except FileNotFoundError:
-            self.ai_retraining()
-
-    def ai_retraining(self):
-        X, Y = self._data_read()
-        self._ai_retraining(X, Y)
-
+        self.X, self.Y = self._data_read()
 
     def _data_read(self) -> tuple:
         X, Y = [], []
@@ -68,9 +53,6 @@ class AIMarksPredict:
                             data_for_learn.append(int(lines[0][i+j][1]))
 
                         if data_for_learn and lines[0][i+self.window_size].isdigit() and lines[0][i+self.window_size][1] != "0":
-                            data_for_learn.append(subject)
-                            data_for_learn.append(grades[str(grade)])
-                            data_for_learn.append(self._skips(lines[1]))
                             data_for_learn.append(self._avg_ball(lines[0][:i + self.window_size]))
                             data_for_learn.append(self._trend(data_for_learn))
                             data_for_learn.append(self._standard_deviation(data_for_learn))
@@ -120,15 +102,12 @@ class AIMarksPredict:
             X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=test_size, random_state=SEED)
             return (X_train, X_test, y_train, y_test)
 
+    def ai_data_block_1(self):
+        Y = [y//4 for y in self.Y]
+        return self._smart_split(self.X, Y, 0.3)
 
 
-
-    def _ai_retraining_model_1(self, X, Y):
-        X_train, X_test, y_train, y_test = self._smart_split(X, Y, test_size=0.2)
-        
-
-
-    def ai_predict(self, marks: dict, grade: int) -> int:
+    def ai_predict(self, marks: dict, grade: int) -> list:
         X_pred = []
 
         subject = next(iter(marks))
@@ -159,17 +138,8 @@ class AIMarksPredict:
             elif sub == list(subjects.keys())[-1]:
                 subject_id = int(list(subjects.keys())[-1][-1]) + 1
 
-        X_pred.append(subject_id)
-        X_pred.append(grades[str(grade)])
-        X_pred.append(self._skips(marks[subject][1]))
         X_pred.append(self._avg_ball(marks[subject][0]))
         X_pred.append(self._trend(X_pred))
         X_pred.append(self._standard_deviation(X_pred))
 
-        X_pred = np.array([X_pred])
-
-        return int(self.model.predict(X_pred)[0])
-
-AI = AIMarksPredict(5)
-AI.ai_retraining()
-print(AI.ai_predict({"алгебра": [['51', '41', '31', '41', '51', '51', '21', '51', '51', '34', '51', '51', '51', '51', '51', '21', '51', '51', '34', '41', '51', '31'], '9/108']}, 10))
+        return X_pred
