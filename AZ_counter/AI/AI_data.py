@@ -106,6 +106,24 @@ class AIMarksPredict:
         Y = [y//4 for y in self.Y]
         return self._smart_split(self.X, Y, 0.3)
 
+    def ai_data_block_2(self):
+        X, Y = [], []
+        for i in range(len(self.X)):
+            if self.Y[i] == 2 or self.Y[i] == 3:
+                X.append(self.X[i])
+                Y.append(self.Y[i])
+
+        return self._smart_split(X, Y, 0.3)
+
+    def ai_data_block_3(self):
+        X, Y = [], []
+        for i in range(len(self.X)):
+            if self.Y[i] == 4 or self.Y[i] == 5:
+                X.append(self.X[i])
+                Y.append(self.Y[i])
+
+        return self._smart_split(X, Y, 0.3)
+
 
     def ai_predict(self, marks: dict, grade: int) -> list:
         X_pred = []
