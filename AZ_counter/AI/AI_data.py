@@ -1,20 +1,5 @@
 import ast
-from  catboost import CatBoostClassifier
-from catboost import CatBoostRegressor
-import numpy as np
 
-subjects = {
-    "id0": ["физика"],
-    "id1": ["алгебра", "практикум по геометрии", "геометрия", "информатика"],
-    "id2": ["география", "история", "литература", "обществознание"],
-    "id3": ["биология", "химия"],
-    "id4": ["русский язык", "английский язык"]
-}
-
-grades = {
-    "8": 0,
-    "10": 1
-}
 SEED = 67
 
 class AIMarksPredict:
@@ -24,21 +9,11 @@ class AIMarksPredict:
 
     def _data_read(self) -> tuple:
         X, Y = [], []
-        subject = 0
-        grade = 1
 
         with open("AI_data/marks_data.txt", "r") as data_file:
             for lines in data_file.readlines():
                 if len(lines) > 6:
                     lines = lines.split(" = ")
-
-                    for sub in subjects:
-                        if lines[0] in subjects[sub]:
-                            subject = int(sub[-1])
-                            break
-                        elif sub == list(subjects.keys())[-1]:
-                            subject = int(list(subjects.keys())[-1][-1])+1
-
                     lines = ast.literal_eval(lines[1])
 
                     for i in range(len(lines[0]) - self.window_size):
@@ -59,9 +34,6 @@ class AIMarksPredict:
 
                             X.append(data_for_learn)
                             Y.append(int(lines[0][i + self.window_size][0]))
-
-                elif len(lines) > 2:
-                    grade = int(lines)
 
         return (X, Y)
 
@@ -85,7 +57,6 @@ class AIMarksPredict:
         return 0
 
     def _standard_deviation(self, X: list) -> float:
-
         valid_elements = [X[i] for i in range(0, self.window_size * 2, 2) if X[i] != 0]
         n = len(valid_elements)
         if n <= 1:
@@ -125,7 +96,7 @@ class AIMarksPredict:
         return self._smart_split(X, Y, 0.3)
 
 
-    def ai_predict(self, marks: dict, grade: int) -> list:
+    def ai_data_predict(self, marks: dict) -> list:
         X_pred = []
 
         subject = next(iter(marks))
@@ -146,15 +117,6 @@ class AIMarksPredict:
             for i in marks[subject][0]:
                 X_pred.append(int(str(i)[0]))
                 X_pred.append(int(str(i)[1]))
-
-        subject_id = 0
-
-        for sub in subjects:
-            if subject.lower() in subjects[sub]:
-                subject_id = int(sub[-1])
-                break
-            elif sub == list(subjects.keys())[-1]:
-                subject_id = int(list(subjects.keys())[-1][-1]) + 1
 
         X_pred.append(self._avg_ball(marks[subject][0]))
         X_pred.append(self._trend(X_pred))
