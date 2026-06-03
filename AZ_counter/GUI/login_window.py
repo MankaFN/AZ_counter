@@ -2,16 +2,18 @@ import customtkinter as ctk
 from services.scraper import NetworkError, AuthError
 from CTkMessagebox import CTkMessagebox
 
-class LoginWindow(ctk.CTkFrame):
-    def __init__(self, parent, storage, scraper):
-        super().__init__(parent)
 
-        self.storage = storage
-        self.scraper = scraper
 
-        self.login_window = ctk.CTk()
+class LoginWindow:
+    def __init__(self, app):
+
+        self.app = app
+
+        self.login_window = ctk.CTkToplevel()
+        self.login_window.withdraw()
+
         self.login_window.title("Login")
-        self.login_window.geometry("350x300")
+        self.login_window.geometry("350x300+940+150")
 
         self._login_entry = None
         self._password_entry = None
@@ -38,25 +40,36 @@ class LoginWindow(ctk.CTkFrame):
 
         ctk.CTkButton(self.login_window, text="Войти", command = lambda: self._register(self._login_entry.get(), self._password_entry.get(), self._trimester_box.get(), self._show_browser_var.get())).place(x=70, y=216)
 
-    def _message_show(self, message, icon):
-        CTkMessagebox(title="Ошибка", message=message, icon=icon, font=("Arial", 14))
+        if self.app.storage.has_data():
+            self.login_window.protocol("WM_DELETE_WINDOW", self.app.main_window_show)
+        else:
+            self._message_show("Ошибка", "Данные отсутствуют, войдите в аккаунт", "warning")
+            self.login_window.protocol("WM_DELETE_WINDOW", self.app.root.destroy)
+
+
+    def _message_show(self, title, message, icon):
+        CTkMessagebox(title=title, message=message, icon=icon, font=("Arial", 14))
         self.login_window.focus_force()
         self._login_entry.focus_force()
 
     def _register(self, login: str, password: str, trim: str, screen_show: bool):
         if not login or not password:
-            self._message_show("Введите логин и пароль", "warning")
+            self._message_show("Ошибка", "Введите логин и пароль", "warning")
         else:
             try:
-                marks_grade = self.scraper.scrape(login, password, int(trim[0]) if trim else None, screen_show)
-                self.storage.save_marks(marks_grade["marks"])
-                self._message_show("Успешный вход", "check")
+                marks_grade = self.app.scraper.scrape(login, password, int(trim[0]) if trim else None, screen_show)
+                self.app.storage.save_marks(marks_grade)
+                self.app.main_window_show()
+                self._message_show("Успех", "Успешный вход", "check")
 
             except NetworkError:
-                self._message_show("Отсутствует подключение к интеренуту", "cancel")
+                self._message_show("Ошибка", "Отсутствует подключение к интеренету", "cancel")
 
             except AuthError:
-                self._message_show("Неверный логин или пароль", "cancel")
+                self._message_show("Ошибка", "Неверный логин или пароль", "cancel")
 
-    def run(self):
-        self.login_window.mainloop()
+    def show(self):
+        self.login_window.deiconify()
+
+    def hide(self):
+        self.login_window.withdraw()

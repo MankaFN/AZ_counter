@@ -4,18 +4,23 @@ class MainWindow:
     def __init__(self, app):
         self.app = app
 
-        self.window = ctk.CTk()
-        self.window.geometry("600x600")
-        self.window.title("Az_counter")
-        self._build_ui()
+        self.window = ctk.CTkToplevel()
+        self.window.withdraw()
 
-    def _build_ui(self):
+        self.window.geometry("1000x600+240+150")
+        self.window.title("Az_counter")
+        self._main_ui()
+
+    def _main_ui(self):
+        self.window.protocol("WM_DELETE_WINDOW", self.app.root.destroy)
+
         ctk.CTkButton(self.window, text = "⚙️", command = self._settings_window).place(x=10, y=10)
 
     def _settings_window(self):
-        self.window.destroy()
+        self.app.settings_window_show()
 
-    def run(self):
-        self.window.mainloop()
+    def hide(self):
+        self.window.withdraw()
 
-MainWindow("ав").run()
+    def show(self):
+        self.window.deiconify()

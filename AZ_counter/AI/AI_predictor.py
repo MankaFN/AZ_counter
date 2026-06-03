@@ -5,13 +5,13 @@ class AIPredictor:
         self.ai_data = ai_data
         try:
             self.block_1 = CatBoostRegressor()
-            self.block_1.load_model("AI_models/block_1")
+            self.block_1.load_model("AI/AI_models/block_1")
 
             self.block_2 = CatBoostRegressor()
-            self.block_2.load_model("AI_models/block_2")
+            self.block_2.load_model("AI/AI_models/block_2")
 
             self.block_3 = CatBoostRegressor()
-            self.block_3.load_model("AI_models/block_3")
+            self.block_3.load_model("AI/AI_models/block_3")
         except CatBoostError:
             self.ai_retraining()
 
@@ -42,7 +42,7 @@ class AIPredictor:
             use_best_model=True
         )
 
-        self.block_1.save_model("AI_models/block_1")
+        self.block_1.save_model("AI/AI_models/block_1")
 
     def _ai_retraining_block_2(self): # 2-3
         X_train, X_test, y_train, y_test = self.ai_data.ai_data_block_2()
@@ -64,7 +64,7 @@ class AIPredictor:
             use_best_model=True
         )
 
-        self.block_2.save_model("AI_models/block_2")
+        self.block_2.save_model("AI/AI_models/block_2")
 
     def _ai_retraining_block_3(self): #4-5
         X_train, X_test, y_train, y_test = self.ai_data.ai_data_block_3()
@@ -86,7 +86,7 @@ class AIPredictor:
             use_best_model=True
         )
 
-        self.block_3.save_model("AI_models/block_3")
+        self.block_3.save_model("AI/AI_models/block_3")
 
     def predict(self, marks: dict) -> int:
         X = self.ai_data.ai_data_predict(marks)

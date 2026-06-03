@@ -2,15 +2,16 @@ import ast
 
 SEED = 67
 
-class AIMarksPredict:
-    def __init__(self, window_size: int = 3):
-        self.window_size = window_size
+class AIMarksData:
+    def __init__(self, window_size: str = "5", path: str = "AI/AI_data/marks_data.txt"):
+        self.window_size = int(window_size)
+        self.path = path
         self.X, self.Y = self._data_read()
 
     def _data_read(self) -> tuple:
         X, Y = [], []
 
-        with open("AI_data/marks_data.txt", "r") as data_file:
+        with open(self.path, "r") as data_file:
             for lines in data_file.readlines():
                 if len(lines) > 6:
                     lines = lines.split(" = ")

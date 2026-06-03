@@ -19,7 +19,7 @@ class MarksScraper:
                 except PlaywrightError:
                     raise NetworkError("Не удалось подключиться к сайту")
 
-                grade = self._login(page, login, password)
+                self._login(page, login, password)
 
                 self._go_to_marks(page)
 
@@ -34,25 +34,7 @@ class MarksScraper:
                 if browser:
                     browser.close()
 
-        return {
-            "marks": marks,
-            "grade": grade
-        }
-
-    def _is_user_grade(self, response):
-        if "/graphql" not in response.url or response.status != 200:
-            return False
-        try:
-            data = response.json()
-            return bool(
-                data.get("data", {})
-                .get("user", {})
-                .get("getCurrentUser", {})
-                .get("studentRoles", [{}])[0]
-                .get("stageGroup")
-            )
-        except Exception:
-            return False
+        return marks
 
     def _login(self, page, login: str, password: str):
         page.get_by_placeholder("Логин").fill(login)
@@ -63,15 +45,7 @@ class MarksScraper:
             page.locator("text=Не удалось войти в систему.").wait_for(state="visible", timeout=4000)
             raise AuthError("Не удалось войти")
         except PlaywrightError:
-            try:
-                with page.expect_response(self._is_user_grade, timeout=5000) as response_info:
-                    pass
-
-                response = response_info.value
-                grade = response.json()["data"]["user"]["getCurrentUser"]["studentRoles"][0]["stageGroup"]["stage"]
-                return grade
-            except Exception:
-                raise ScraperError("Ошибка в сборе класса")
+            pass
 
 
 
@@ -85,7 +59,9 @@ class MarksScraper:
         for row in range(len(rows)):
             res = rows[row].locator('[data-testid*="table-cell"]').nth(0).inner_text().strip()
             if res.isdigit():
-                return 1
+                res2 = rows[row].locator('[data-testid*="table-cell"]').nth(1).inner_text().strip()
+                if res2 != "—":
+                    return 1
             else:
                 try:
                     float(res)
@@ -114,4 +90,3 @@ class MarksScraper:
             else:
                 continue
         return marks
-print(MarksScraper().scrape("kapyrina-alevtina1", "240611_Alya", 2, True))

@@ -17,9 +17,9 @@ class Storage:
                     """)
 
             cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS marks_data.txt (
+                    CREATE TABLE IF NOT EXISTS marks (
                         subject TEXT PRIMARY KEY,
-                        marks_data.txt TEXT,
+                        marks TEXT,
                         skips TEXT
                         )
                     """)
@@ -50,17 +50,21 @@ class Storage:
         return self._get_settings("password")
     def get_trim(self) -> str:
         return self._get_settings("trim")
+    def get_window_size(self) -> str:
+        return self._get_settings("window_size")
 
     def save_user(self, login: str, password: str):
         self._set_settings("login", login)
         self._set_settings("password", password)
     def set_trim(self, trim: int):
         self._set_settings("trim", str(trim))
+    def set_window_size(self, window_size: int):
+        self._set_settings("window_size", str(window_size))
 
     def has_data(self) -> bool:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM marks_data.txt")
+            cursor.execute("SELECT COUNT(*) FROM marks")
             count = cursor.fetchone()[0]
         return count > 0
 
@@ -68,13 +72,13 @@ class Storage:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
 
-            cursor.execute("DELETE FROM marks_data.txt")
+            cursor.execute("DELETE FROM marks")
 
             for subject, data in marks.items():
                 mark = json.dumps(data[0])
                 skips = data[1]
                 cursor.execute(
-                    "INSERT INTO marks_data.txt VALUES (?, ?, ?)",
+                    "INSERT INTO marks VALUES (?, ?, ?)",
                     (subject, mark, skips)
                 )
 
@@ -83,7 +87,7 @@ class Storage:
     def marks_give(self) -> dict:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM marks_data.txt")
+            cursor.execute("SELECT * FROM marks")
             rows = cursor.fetchall()
 
             marks = {}
