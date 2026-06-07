@@ -2,3 +2,4 @@ playwright
 matplotlib
 customtkinter
 CTkMessagebox
+catboost

@@ -2,8 +2,6 @@ import customtkinter as ctk
 from services.scraper import NetworkError, AuthError
 from CTkMessagebox import CTkMessagebox
 
-
-
 class LoginWindow:
     def __init__(self, app):
 
@@ -21,6 +19,12 @@ class LoginWindow:
         self._show_browser_var = ctk.BooleanVar(value=False)
 
         self._login_ui()
+
+        if self.app.storage.has_data():
+            self.login_window.protocol("WM_DELETE_WINDOW", self.app.main_window_show)
+        else:
+            self._message_show("Ошибка", "Данные отсутствуют, войдите в аккаунт", "warning")
+            self.login_window.protocol("WM_DELETE_WINDOW", self.app.root.destroy)
 
     def _login_ui(self):
         ctk.CTkLabel(self.login_window, text="Логин").place(x=80, y=10)
@@ -40,13 +44,6 @@ class LoginWindow:
 
         ctk.CTkButton(self.login_window, text="Войти", command = lambda: self._register(self._login_entry.get(), self._password_entry.get(), self._trimester_box.get(), self._show_browser_var.get())).place(x=70, y=216)
 
-        if self.app.storage.has_data():
-            self.login_window.protocol("WM_DELETE_WINDOW", self.app.main_window_show)
-        else:
-            self._message_show("Ошибка", "Данные отсутствуют, войдите в аккаунт", "warning")
-            self.login_window.protocol("WM_DELETE_WINDOW", self.app.root.destroy)
-
-
     def _message_show(self, title, message, icon):
         CTkMessagebox(title=title, message=message, icon=icon, font=("Arial", 14))
         self.login_window.focus_force()
@@ -58,7 +55,10 @@ class LoginWindow:
         else:
             try:
                 marks_grade = self.app.scraper.scrape(login, password, int(trim[0]) if trim else None, screen_show)
+
                 self.app.storage.save_marks(marks_grade)
+                self.app.storage.save_user(login, password)
+
                 self.app.main_window_show()
                 self._message_show("Успех", "Успешный вход", "check")
 
