@@ -1,4 +1,4 @@
-from catboost import CatBoostRegressor, CatBoostError
+from catboost import CatBoostRegressor, CatBoostError, CatBoostClassifier
 
 class AIPredictor:
     def __init__(self, ai_data):
@@ -88,9 +88,9 @@ class AIPredictor:
 
         self.block_3.save_model("AI/AI_models/block_3")
 
-    def predict(self, marks: dict) -> int:
-        X = self.ai_data.ai_data_predict(marks)
-        if self.block_1.predict(X) == 0:
-            return self.block_2.predict(X)
+    def predict(self, marks: dict, subject: str) -> int:
+        X = self.ai_data.ai_data_predict(marks, subject)
+        if round(self.block_1.predict(X)) == 0:
+            return round(self.block_2.predict(X))
         else:
-            return self.block_3.predict(X)
+            return round(self.block_3.predict(X))

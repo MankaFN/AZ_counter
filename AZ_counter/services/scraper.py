@@ -36,7 +36,8 @@ class MarksScraper:
 
         return marks
 
-    def _login(self, page, login: str, password: str):
+    @staticmethod
+    def _login(page, login: str, password: str):
         page.get_by_placeholder("Логин").fill(login)
         page.get_by_placeholder("Пароль").fill(password)
         page.get_by_role("button", name="Войти", exact=True).click()
@@ -47,14 +48,14 @@ class MarksScraper:
         except PlaywrightError:
             pass
 
-
-
-    def _go_to_marks(self, page):
+    @staticmethod
+    def _go_to_marks(page):
         page.get_by_role("button").and_(page.locator(".primal-menu-btn")).click()
         page.locator('[href="/final-marks"]').click()
         page.wait_for_selector('[data-testid="FinalMarks.table-container"]', timeout=20000)
 
-    def _detect_trim(self, page) -> int:
+    @staticmethod
+    def _detect_trim(page) -> int:
         rows = page.locator('div[style*="margin-left: 8px"]').all()
         for row in range(len(rows)):
             res = rows[row].locator('[data-testid*="table-cell"]').nth(0).inner_text().strip()
@@ -70,7 +71,8 @@ class MarksScraper:
                     pass
         return 0
 
-    def _collect_marks(self, page, trim_num:int) -> dict:
+    @staticmethod
+    def _collect_marks(page, trim_num:int) -> dict:
         rows = page.locator('div[style*="margin-left: 8px"]').all()
         marks = {}
 

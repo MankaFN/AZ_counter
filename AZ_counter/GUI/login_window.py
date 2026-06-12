@@ -1,6 +1,11 @@
 import customtkinter as ctk
-from services.scraper import NetworkError, AuthError
+from AZ_counter.services.scraper import NetworkError, AuthError
 from CTkMessagebox import CTkMessagebox
+
+trims = {
+    "1 - полугодие": 1,
+    "2 - полугодие": 2
+}
 
 class LoginWindow:
     def __init__(self, app):
@@ -24,7 +29,7 @@ class LoginWindow:
             self.login_window.protocol("WM_DELETE_WINDOW", self.app.main_window_show)
         else:
             self._message_show("Ошибка", "Данные отсутствуют, войдите в аккаунт", "warning")
-            self.login_window.protocol("WM_DELETE_WINDOW", self.app.root.destroy)
+            self.login_window.protocol("WM_DELETE_WINDOW", self.app.quit_app)
 
     def _login_ui(self):
         ctk.CTkLabel(self.login_window, text="Логин").place(x=80, y=10)
@@ -54,13 +59,20 @@ class LoginWindow:
             self._message_show("Ошибка", "Введите логин и пароль", "warning")
         else:
             try:
-                marks_grade = self.app.scraper.scrape(login, password, int(trim[0]) if trim else None, screen_show)
+                marks_grade = self.app.scraper.scrape(login, password, trims[trim] if trim else None, screen_show)
 
                 self.app.storage.save_marks(marks_grade)
                 self.app.storage.save_user(login, password)
+                self.app.storage.set_trim(trims[trim])
+
+                self._message_show("Успех", "Успешный вход", "check")
 
                 self.app.main_window_show()
-                self._message_show("Успех", "Успешный вход", "check")
+
+                self._login_entry = None
+                self._password_entry = None
+                self._trimester_box = None
+                self._show_browser_var = ctk.BooleanVar(value=False)
 
             except NetworkError:
                 self._message_show("Ошибка", "Отсутствует подключение к интеренету", "cancel")
@@ -69,7 +81,10 @@ class LoginWindow:
                 self._message_show("Ошибка", "Неверный логин или пароль", "cancel")
 
     def show(self):
+        self._login_ui()
         self.login_window.deiconify()
 
     def hide(self):
         self.login_window.withdraw()
+        for frame in self.login_window.winfo_children():
+            frame.destroy()

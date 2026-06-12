@@ -97,10 +97,8 @@ class AIMarksData:
         return self._smart_split(X, Y, 0.3)
 
 
-    def ai_data_predict(self, marks: dict) -> list:
+    def ai_data_predict(self, marks: dict, subject: str) -> list:
         X_pred = []
-
-        subject = next(iter(marks))
 
         marks[subject][0] = [i for i in marks[subject][0] if (i.isdigit() and str(i[1]) != "0")]
 

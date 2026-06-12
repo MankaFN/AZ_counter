@@ -12,8 +12,19 @@ class SettingsWindow:
 
         self.settings_window.protocol("WM_DELETE_WINDOW", self.app.main_window_show)
 
+        self.window_show = None
+
     def _settings_ui(self):
-        pass
+
+
+        ctk.CTkButton(self.settings_window, text=f"Сменить триместр, текущий: {self.app.storage.get_trim()}").place(x=10, y=10)
+
+    def _data_reload(self, trim :int, change :bool = False):
+        if change:
+            trim = trim % 2 + 1
+
+        self.app.scraper.scrape(trim_num=trim)
+
 
     def show(self):
         self._settings_ui()

@@ -1,6 +1,11 @@
 import sqlite3
 import json
 
+default_settings = [
+    ("show_screen", "0"), #Показ входа в браузер
+    ("window_size", "5")  #Количество оценок анализируемых нейросетью
+]
+
 class Storage:
     def __init__(self, db_path: str = "data/database.db"):
         self.db_path = db_path
@@ -15,6 +20,11 @@ class Storage:
                             value TEXT
                         )
                     """)
+
+            cursor.executemany("""
+                INSERT OR IGNORE INTO settings (key, value) 
+                VALUES (?, ?)
+            """, default_settings)
 
             cursor.execute("""
                     CREATE TABLE IF NOT EXISTS marks (
